@@ -49,7 +49,7 @@ def load_stats(file, k=6):
 				for i in range(4,len(split_line),2):
   					piece.connection_locations.append((float(split_line[i]), float(split_line[i+1])))
 				assembly.pieces[id] = piece
-		assembly.update_neighbourhoods(True, k)
+		assembly.update_neighbourhoods(k)
 	return assembly
 
 def distance(d1, d2):
@@ -65,7 +65,7 @@ class Assembly:
 		self.radius = rad
 		self.neighbourhood_dist = (rad/2)+24
 
-	def update_neighbourhoods(self, nearest, k1):
+	def update_neighbourhoods(self, k1):
 		tree = KDTree([piece.position for _, piece in self.pieces.items()])
 		for p1 in range(0, num_pieces):
 			try:
