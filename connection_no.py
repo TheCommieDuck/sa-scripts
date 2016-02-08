@@ -11,8 +11,10 @@ if __name__ == "__main__":
 			connection_freq[(c1, c2)] = connection_freq[(c1, c2)] + 1
 			total_conns += 1
 	print('Connection type:')
-	for c1, c2 in connection_freq:
+	d = connection_freq
+	for c1, c2 in sorted(d, key=lambda i: -int(d[i])):
 		print(c1, '-', c2, ": %d (%5.2f%%)" % (connection_freq[(c1, c2)], connection_freq[(c1, c2)]*100/total_conns))
+	print('Total connections:', total_conns)
 	print('Average connections per mix:', int(total_conns/sa.num_mixes))
 	print('Average connections per piece per mix:', round(total_conns/14976, 2))
 	most = max(connection_freq.items(), key=lambda x: x[1])

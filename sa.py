@@ -7,19 +7,20 @@ import numpy as np
 num_pieces = 100
 total_binding_sites = 10
 num_mixes = 0
+k_nearest = 6
 
 def get_parent_dir(directory):
     return os.path.dirname(directory)
 
-def load_all(nearest=False, k=6):
-	path = os.path.join(get_parent_dir(os.getcwd()), 'output')
-	files = [ os.path.join(get_parent_dir(os.getcwd()), 'output', f) for f in os.listdir(path) if os.path.isfile(os.path.join(path,f)) ]
-	assemblies = [load_stats(file, nearest, k) for file in files]
+def load_all(dir='output', k=6):
+	path = os.path.join(get_parent_dir(os.getcwd()), dir)
+	files = [ os.path.join(path, f) for f in os.listdir(path) if os.path.isfile(os.path.join(path,f)) ]
+	assemblies = [load_stats(file, k) for file in files]
 	global num_mixes
 	num_mixes = len(assemblies)
 	return assemblies
 
-def load_stats(file, nearest, k=6):
+def load_stats(file, k=6):
 	assembly = Assembly(num_pieces) #todo: read this from file
 	with open(file, 'r') as csvfile:
 		reader = csv.reader(csvfile)
@@ -48,7 +49,7 @@ def load_stats(file, nearest, k=6):
 				for i in range(4,len(split_line),2):
   					piece.connection_locations.append((float(split_line[i]), float(split_line[i+1])))
 				assembly.pieces[id] = piece
-		assembly.update_neighbourhoods(nearest, k)
+		assembly.update_neighbourhoods(True, k)
 	return assembly
 
 def distance(d1, d2):
@@ -62,33 +63,18 @@ class Assembly:
 	
 	def set_radius(self, rad):
 		self.radius = rad
-		self.neighbourhood_dist = rad*1.5
+		self.neighbourhood_dist = (rad/2)+24
 
 	def update_neighbourhoods(self, nearest, k1):
-		if nearest:
-			tree = KDTree([piece.position for _, piece in self.pieces.items()])
-			for p1 in range(0, num_pieces):
-				try:
-					nearest = tree.query(self.pieces[p1].position, k=k1)
-					for n in nearest[1]:
-						self.pieces[p1].neighbourhood.add(n)
-						self.graph.add_neighbourhood(p1, n, distance(self.pieces[p1].position, self.pieces[n].position))
-				except KeyError:
-					pass
-		else:
-			for p1 in range(0, num_pieces):
-				for p2 in range(0, num_pieces):
-					if p1 == p2:
-						continue
-					try:
-						if distance(self.pieces[p1].position, self.pieces[p2].position) <= (self.radius + self.neighbourhood_dist):
-							if any(distance(self.pieces[p1].position, d2) < self.neighbourhood_dist for d2 in self.pieces[p2].connection_locations):
-								self.pieces[p1].neighbourhood.add(p2)
-								self.graph.add_neighbourhood(p1, p2, distance(self.pieces[p1].position, self.pieces[p2].position))
-					except KeyError: #ignore ones that do not appear
-						pass
-				
-
+		tree = KDTree([piece.position for _, piece in self.pieces.items()])
+		for p1 in range(0, num_pieces):
+			try:
+				nearest = tree.query(self.pieces[p1].position, k=k1)
+				for n in nearest[1]:
+					self.pieces[p1].neighbourhood.add(n)
+					self.graph.add_neighbourhood(p1, n, distance(self.pieces[p1].position, self.pieces[n].position))
+			except KeyError:
+					pass			
 
 	def add_connection(self, connection):
 		p1 = connection.p1
