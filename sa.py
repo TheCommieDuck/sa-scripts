@@ -3,7 +3,8 @@ import matplotlib.pyplot as plt
 import networkx as nx
 from scipy.spatial import KDTree
 import numpy as np
-
+import random_assembly
+import sys
 num_pieces = 100
 total_binding_sites = 10
 num_mixes = 0
@@ -12,12 +13,15 @@ k_nearest = 6
 def get_parent_dir(directory):
     return os.path.dirname(directory)
 
-def load_all(dir='output', k=6):
-	path = os.path.join(get_parent_dir(os.getcwd()), dir)
-	files = [ os.path.join(path, f) for f in os.listdir(path) if os.path.isfile(os.path.join(path,f)) ]
-	assemblies = [load_stats(file, k) for file in files]
-	global num_mixes
-	num_mixes = len(assemblies)
+def load_all(dir="output", k=6):
+	if dir == 'random':
+		assemblies = random_assembly.load_all(int(sys.argv[2]))
+	else:
+		path = os.path.join(get_parent_dir(os.getcwd()), dir)
+		files = [ os.path.join(path, f) for f in os.listdir(path) if os.path.isfile(os.path.join(path,f)) ]
+		assemblies = [load_stats(file, k) for file in files]
+		global num_mixes
+		num_mixes = len(assemblies)
 	return assemblies
 
 def load_stats(file, k=6):
@@ -69,12 +73,16 @@ class Assembly:
 		tree = KDTree([piece.position for _, piece in self.pieces.items()])
 		for p1 in range(0, num_pieces):
 			try:
-				nearest = tree.query(self.pieces[p1].position, k=k1)
+				nearest = tree.query(self.pieces[p1].position, k=k1+1)
 				for n in nearest[1]:
+					if n == p1:
+						continue
+					if len(self.pieces[p1].neighbourhood) >= k1: #if we've added them, stop
+						break
 					self.pieces[p1].neighbourhood.add(n)
 					self.graph.add_neighbourhood(p1, n, distance(self.pieces[p1].position, self.pieces[n].position))
 			except KeyError:
-					pass			
+					pass
 
 	def add_connection(self, connection):
 		p1 = connection.p1
