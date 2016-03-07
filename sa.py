@@ -3,7 +3,8 @@ import matplotlib.pyplot as plt
 import networkx as nx
 from scipy.spatial import KDTree
 import numpy as np
-
+import random_assembly
+import sys
 num_pieces = 100
 total_binding_sites = 10
 num_mixes = 0
@@ -21,7 +22,7 @@ def load_all(dir="output", k=6):
 		assemblies = [load_stats(file, k) for file in files]
 		global num_mixes
 		num_mixes = len(assemblies)
-		return assemblies
+	return assemblies
 
 def load_stats(file, k=6):
 	assembly = Assembly(num_pieces) #todo: read this from file
