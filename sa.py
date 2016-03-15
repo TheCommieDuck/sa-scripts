@@ -13,9 +13,9 @@ k_nearest = 6
 def get_parent_dir(directory):
     return os.path.dirname(directory)
 
-def load_all(dir="output", k=6):
+def load_all(dir="output", k=6, rand_nums=150, rand_amounts=[]):
 	if dir == 'random':
-		assemblies = random_assembly.load_all(int(sys.argv[2]))
+		assemblies = random_assembly.load_all(rand_nums, rand_amounts)
 	else:
 		path = os.path.join(get_parent_dir(os.getcwd()), dir)
 		files = [ os.path.join(path, f) for f in os.listdir(path) if os.path.isfile(os.path.join(path,f)) ]
